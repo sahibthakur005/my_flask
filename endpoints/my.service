@@ -1,0 +1,12 @@
+[Unit]
+Description=Gunicorn instance to serve my
+After=network.target
+
+[Service]
+User=hdlokmedia
+WorkingDirectory=/home/hdlokmedia/myflask/my_flask
+ExecStart=/home/hdlokmedia/myflask/my_flask/usahib/bin/gunicorn -w 4 -b 0.0.0.0:5000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

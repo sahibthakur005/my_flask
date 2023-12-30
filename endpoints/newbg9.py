@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint
 import base64
-from rembg import remove
 import os
 import cv2
 import tempfile
@@ -11,7 +10,7 @@ from io import BytesIO
 from werkzeug.datastructures import FileStorage
 
 
-bp = Blueprint('blurimage', __name__)
+bp = Blueprint('newbg9', __name__)
 
 #img2 = cv2.imread(r'C:\Users\adesh\Documents\GitHub\my_flask\endpoints\image\img2.jpg')  # Replace 
 
@@ -22,7 +21,7 @@ def process_image_chunks(file_storage):
         chunk = file_storage.read(chunk_size)
         if not chunk:
             break
-        processed_chunk = chunk
+        processed_chunk = rembg.remove(chunk)
         output.write(processed_chunk)
         return output.getvalue()
  
@@ -30,13 +29,14 @@ def process_image_chunks(file_storage):
 
 
 
-@bp.route('/blurimage', methods=['POST'])
+@bp.route('/newbg9', methods=['POST'])
 def upload_image():
     if 'image' not in request.files:
         return jsonify({'message': 'No file part in the request'}), 400
     
 
     image_file = request.files['image']
+    img3 = request.form['description']
     if image_file.filename == '':
         return jsonify({'message': 'No selected file'}), 400
 
@@ -60,55 +60,58 @@ def upload_image():
         temp_file.write(output_image)
     
        
-    original_img = cv2.imread(temp_file_path)
+    img1 = cv2.imread(temp_file_path, cv2.IMREAD_UNCHANGED)
+    #img1 = output_image
+    #cv process begin
+    #img1 = cv2.imread(r'C:\Users\adesh\Documents\GitHub\my_flask\endpoints\image\img1.jpg', cv2.IMREAD_UNCHANGED)  # Replace 'path_to_img1.png' with the actual path
+    img2 = cv2.imread(img3)  # Replace 'path_to_img2.png' with the actual path
 
-    #cv2 code start....
-    # Load the original image
-#original_img = cv2.imread(r'C:\xampp\htdocs\imageuploader\uploads\imgr1.jpg')
+# Ensure both images have the same dimensions
+    img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
 
-# Store the original image's shape for later use
-    height, width, _ = original_img.shape
+# Check if the foreground image has an alpha channel
+    if img1.shape[-1] == 4:
+      b, g, r, alpha = cv2.split(img1)
 
-# Extract foreground using Rembg
-    output = remove(cv2.imencode('.png', original_img)[1].tobytes())
+    # Normalize alpha channel to range 0-1
+    alpha = alpha / 255.0
 
-    nparr = np.frombuffer(output, np.uint8)
-    img_foreground = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+    # Convert alpha channel to 3-channel format
+    alpha = cv2.merge((alpha, alpha, alpha))
 
-# Create a mask from the alpha channel of the foreground image
-    alpha = img_foreground[:, :, 3]
+    # Resize alpha channel to match image dimensions
+    alpha = cv2.resize(alpha, (img1.shape[1], img1.shape[0]))
 
-# Resize the alpha channel to match the original image's size
-    alpha_resized = cv2.resize(alpha, (width, height))
+    # Calculate the weighted sum of the foreground and background images
+    foreground = cv2.multiply(alpha, img1[:, :, :3].astype(float))
+    background = cv2.multiply(1.0 - alpha, img2.astype(float))
 
-# Normalize the alpha channel to be between 0 and 1
-    alpha_resized = alpha_resized / 255.0
-
-# Remove alpha channel to blend properly
-    img_foreground = img_foreground[:, :, :3]
-
-# Resize the foreground to match the original image's size
-    img_foreground_resized = cv2.resize(img_foreground, (width, height))
-
-# Blur the background of the original image
-    blurred_background = cv2.GaussianBlur(original_img, (195, 195), 0)  # Adjust the blur kernel size as needed
-
-# Blend the foreground and blurred background using bitwise operations
-    mask = np.repeat(np.expand_dims(alpha_resized, axis=2), 3, axis=2)
-    result = np.uint8(img_foreground_resized * mask + blurred_background * (1 - mask))
-
-# Replace the original image's region with the blended image
-    original_img = result
+    # Convert the result back to uint8
+    result = cv2.convertScaleAbs(cv2.add(foreground, background))
     os.remove(temp_file_path)
 
-    #cv2.imwrite(r'C:\Users\adesh\Desktop\imgex\enu.jpg', original_img)
-
-# Display the result
-    #cv2.imshow('Blurred Background with Foreground', original_img)
+    # Display the resulting image
+    #cv2.imshow('Overlay Image', result)
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
-    #cv2 code end...
-    retval, buffer = cv2.imencode('.png', original_img)
+    #else:
+   # print("Foreground image does not contain an alpha channel.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #input_array = file.read()
+    #output_array = rembg.remove(input_array)
+    retval, buffer = cv2.imencode('.png', result)
 
     img_str_bytes = base64.b64encode(buffer)
     image_byte_array = img_str_bytes.decode("utf-8")

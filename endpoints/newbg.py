@@ -95,7 +95,7 @@ def upload_image():
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
     #else:
-    print("Foreground image does not contain an alpha channel.")
+   # print("Foreground image does not contain an alpha channel.")
 
 
 
