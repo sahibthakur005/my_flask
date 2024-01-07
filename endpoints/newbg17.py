@@ -51,20 +51,15 @@ def upload_image():
     #img_str_bytes = base64.b64encode(buffered.getvalue())
     #image_file = file
 
-    file_storage = FileStorage(image_file)
-
-    output_image = process_image_chunks(file_storage)
+    nparr = np.frombuffer(image_file.read(), np.uint8)
+    image2 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    img1 = rembg.remove(image2)
+    img2 = cv2.imread(img3)
     
-    temp_file_path = tempfile.NamedTemporaryFile(suffix='.png', delete=False).name
-    with open(temp_file_path, 'wb') as temp_file:
-        temp_file.write(output_image)
-    
-       
-    img1 = cv2.imread(temp_file_path, cv2.IMREAD_UNCHANGED)
     #img1 = output_image
     #cv process begin
     #img1 = cv2.imread(r'C:\Users\adesh\Documents\GitHub\my_flask\endpoints\image\img1.jpg', cv2.IMREAD_UNCHANGED)  # Replace 'path_to_img1.png' with the actual path
-    img2 = cv2.imread(img3)  # Replace 'path_to_img2.png' with the actual path
+     # Replace 'path_to_img2.png' with the actual path
 
 # Ensure both images have the same dimensions
     img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
@@ -88,14 +83,24 @@ def upload_image():
 
     # Convert the result back to uint8
     result = cv2.convertScaleAbs(cv2.add(foreground, background))
-    os.remove(temp_file_path)
+    # Define text and its style
+    image = result
+    text = "unnu Ai app"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    font_thickness = 2
+    text_color = (255, 255, 255)  # Yellow color in BGR format
 
-    # Display the resulting image
-    #cv2.imshow('Overlay Image', result)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
-    #else:
-   # print("Foreground image does not contain an alpha channel.")
+# Get text size
+    text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
+
+# Position the text at the bottom right corner with a margin of 10 pixels
+    text_x = image.shape[1] - text_size[0] - 10
+    text_y = image.shape[0] - 10
+
+# Overlay text on the image
+    cv2.putText(image, text, (text_x, text_y), font, font_scale, text_color, font_thickness)
+    #os.remove(temp_file_path)
 
 
 
@@ -111,7 +116,7 @@ def upload_image():
 
     #input_array = file.read()
     #output_array = rembg.remove(input_array)
-    retval, buffer = cv2.imencode('.png', result)
+    retval, buffer = cv2.imencode('.png', image)
 
     img_str_bytes = base64.b64encode(buffer)
     image_byte_array = img_str_bytes.decode("utf-8")

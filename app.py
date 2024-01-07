@@ -1,7 +1,7 @@
 from flask import Flask
 from endpoints import  upload_image, blurimage
 from endpoints import newbg, newbg2, newbg3, newbg4, newbg5, newbg6, newbg7, newbg8, newbg9, newbg10
-from endpoints import newbg11, newbg12, newbg13, newbg14, newbg15, newbg16, newbg17, newbg18, newbg19, newbg20
+from endpoints import newbg11, newbg12, newbg13, newbg14, newbg15, newbg16, newbg17, newbg18, newbg19
 
 app = Flask(__name__)
 #register blueprint for endpoint
@@ -27,7 +27,8 @@ app.register_blueprint(newbg16.bp)
 app.register_blueprint(newbg17.bp)
 app.register_blueprint(newbg18.bp)
 app.register_blueprint(newbg19.bp)
-app.register_blueprint(newbg20.bp)
+
+#app.register_blueprint(sketch.bp)
 
 
 if __name__ == "__main__":

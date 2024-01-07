@@ -10,10 +10,10 @@ from io import BytesIO
 from werkzeug.datastructures import FileStorage
 
 
-bp = Blueprint('newbg', __name__)
+bp = Blueprint('sketch', __name__)
 
 
-@bp.route('/newbg', methods=['POST'])
+@bp.route('/sketch', methods=['POST'])
 def upload_image():
     if 'image' not in request.files:
         return jsonify({'message': 'No file part in the request'}), 400

@@ -91,14 +91,33 @@ def upload_image():
     img_foreground_resized = cv2.resize(img_foreground, (width, height))
 
 # Blur the background of the original image
-    blurred_background = cv2.GaussianBlur(original_img, (195, 195), 0)  # Adjust the blur kernel size as needed
+    blurred_background = cv2.GaussianBlur(original_img, (81, 81), 0)  # Adjust the blur kernel size as needed
 
 # Blend the foreground and blurred background using bitwise operations
     mask = np.repeat(np.expand_dims(alpha_resized, axis=2), 3, axis=2)
     result = np.uint8(img_foreground_resized * mask + blurred_background * (1 - mask))
 
+    # Define text and its style
+    image = result
+    text = "unnu Ai"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    font_thickness = 2
+    text_color = (0, 255, 255)  # Yellow color in BGR format
+
+# Get text size
+    text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
+
+# Position the text at the bottom right corner with a margin of 10 pixels
+    text_x = image.shape[1] - text_size[0] - 10
+    text_y = text_size[1] + 10
+
+# Overlay text on the image
+    cv2.putText(image, text, (text_x, text_y), font, font_scale, text_color, font_thickness)
+    #os.remove(temp_file_path)
+
 # Replace the original image's region with the blended image
-    original_img = result
+    original_img = image
     os.remove(temp_file_path)
 
     #cv2.imwrite(r'C:\Users\adesh\Desktop\imgex\enu.jpg', original_img)
